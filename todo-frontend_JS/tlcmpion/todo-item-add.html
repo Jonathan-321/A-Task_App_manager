@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Todo Item</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+  <h2>Add Todo Item</h2>
+  <div class="block-center">
+    <p><span id="page-message">Enter fields and click Save</span></p>
+    <p><span class="error-head">* required field.</span></p>
+
+    <form id="itemForm">
+      <input type="hidden" id="listId" name="listId" value="" />
+      Name: <input type="text" id="name" />
+      <span id="nameErr" class="error">* </span>
+      <br /><br />
+      Description: <textarea id="description"></textarea>
+      <br />
+      <br />
+      State:
+      <select id="state">
+        <option value="in-progress">In Progress</option>
+        <option value="complete">Complete</option>
+      </select>
+      <br /><br />
+      <button type="button" onclick="submitForm()">Save</button>
+      <button type="button" onclick="window.history.back()">Cancel</button>
+    </form>
+  </div>
+
+  <script>    
+  
+    function urlParam(name) {
+      var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(window.location.href);
+      if (results == null) {
+        return null;
+      } else {
+        return results[1] || 0;
+      }
+    }
+
+    var listId = urlParam("listId");
+    document.getElementById("listId").value = listId;
+
+    function submitForm() {
+      var name = document.getElementById("name").value;
+      var description = document.getElementById("description").value;
+      var state = document.getElementById("state").value;
+      var data = JSON.stringify({
+        name: name,
+        description: description,
+        state: state,
+      });
+
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 201) {
+            window.location.href = "todo-list-update.html?id=" + urlParam("listId");
+          } else {
+            console.log("Error adding todo item:", this.statusText);
+          }
+        }
+      };
+
+      xmlhttp.open("POST", "/todoapi/lists/" + urlParam("listId") + "/items", true);
+      xmlhttp.setRequestHeader("Content-type", "application/json");
+      xmlhttp.send(data);
+    }
+
+  </script>
+</body>
+</html>

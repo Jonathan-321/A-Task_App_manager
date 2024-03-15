@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Todo List Update</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+  <h2>Todo List Update</h2>
+  <div class="block-center">
+    <p><span class="error-head">* required field.</span></p>
+    <p><span id="page-message">Enter fields and click Save</span></p>
+
+    <form id="listForm" onsubmit="submitForm(event)">
+      <input type="hidden" id="listId" name="listId" value="">
+
+      Name: <input type="text" id="name" />
+      <span id="nameErr" class="error">* </span>
+      <br /><br />
+
+      <button type="submit"> Update</button>
+      <button type="button" onclick="deleteList()">Delete</button>
+      <button type="button" onclick="goToLists()">Lists</button>
+    </form>
+
+  </div>
+  <h3>Todo List Items</h3>
+  <table id="todo-item-table">
+    <tr>
+      <th>Complete</th>
+      <th>Name</th>
+      <th>Description</th>
+      <th>State</th>
+      <th>Action</th>
+    </tr>
+  </table>
+
+  <form action="todo-item-add.html" method="get">
+    <input type="hidden" name="listId" id="listIdAdd" value="" />
+    <button type="submit">Add Item</button>
+  </form>
+
+  <script>
+
+    /*  This function retrieves the value of a specified URL parameter
+     from the current page URL.
+   It uses a regular expression to extract the parameter value.
+    */
+
+    function urlParam(name) {
+      var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(
+        window.location.href
+      );
+      if (results == null) {
+        return null;
+      } else {
+        return results[1] || 0;
+      }
+    }
+
+    var listId = urlParam("id");
+    document.getElementById("listId").value = listId;
+    document.getElementById("listIdAdd").value = listId;
+
+    /* 
+    This function is called when the update form is submitted.
+It prevents the default form submission behavior.
+It retrieves the updated list name from the input field.
+It creates an object with the list ID and updated name, converts it to JSON format.
+It sends an HTTP PUT request to the server endpoint "/todoapi/lists/{listId}" 
+to update the list.
+If the update is successful, it displays a success
+message; otherwise, it displays an error message. */
+    function submitForm(e) {
+      e.preventDefault();
+      var name = document.getElementById("name").value;
+      var data = JSON.stringify({
+        id: listId,
+        name: name,
+      });
+
+
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            document.getElementById("page-message").innerHTML =
+              "List Updated";
+          } else {
+            document.getElementById("page-message").innerHTML =
+              "Error:" + this.statusText;
+          }
+        }
+      };
+      xmlhttp.open("PUT", "/todoapi/lists/" + listId, true);
+      xmlhttp.setRequestHeader("Content-type", "application/json");
+      xmlhttp.send(data);
+    }
+
+    /* 
+    This function is called when the "Delete" button is clicked.
+It sends an HTTP DELETE request to the server endpoint "/todoapi/lists/{listId}" to delete the list.
+If the deletion is successful, it redirects the user to the todo-list.html page; 
+otherwise, it displays an error message.
+*/
+    function deleteList() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            window.location.assign("todo-list.html");
+          } else {
+            document.getElementById("page-message").innerHTML =
+              "Error:" + this.statusText;
+          }
+        }
+      };
+      xmlhttp.open("DELETE", "/todoapi/lists/" + listId, true);
+      xmlhttp.send();
+    }
+
+    function getListName() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            document.getElementById("name").value = JSON.parse(this.responseText).list.name;
+
+          } else {
+            document.getElementById("page-message").innerHTML =
+              "Error:" + this.statusText;
+          }
+        }
+      };
+
+      xmlhttp.open("GET", "/todoapi/lists/" + listId, true);
+      xmlhttp.send();
+    }
+
+    function goToLists() {
+      window.location.assign("todo-list.html");
+    }
+
+
+    /* 
+    loadTodoItems(listId) function:
+This function is responsible for loading the todo items of a specific list.
+It sends an HTTP GET request to the server endpoint "/todoapi/lists/{listId}/items" to retrieve the items.
+When the response is received, it parses the JSON data and iterates over the items.
+For each item, it creates a new table row and appends it to the table body.
+Each row includes a checkbox for marking the item as complete, the item name, 
+description, state, and action buttons for saving and deleting the item. */
+
+
+    function loadTodoItems() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+          var items = JSON.parse(this.responseText).items;
+          var tableBody = document.getElementById("todo-item-table");
+
+          for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var row = document.createElement("tr");
+
+
+            var completeCell = document.createElement("td");
+            var checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = item.state === "complete";
+            checkbox.id = "item" + item.id;
+
+            checkbox.onclick = checkboxClick;
+
+
+            completeCell.appendChild(checkbox);
+            row.appendChild(completeCell);
+
+            var nameCell = document.createElement("td");
+            nameCell.textContent = item.name;
+            row.appendChild(nameCell);
+
+            var descriptionCell = document.createElement("td");
+            descriptionCell.textContent = item.description;
+            row.appendChild(descriptionCell);
+
+            var stateCell = document.createElement("td");
+            stateCell.textContent = item.state;
+            stateCell.id = "fitem" + item.id;
+            row.appendChild(stateCell);
+
+            var actionsCell = document.createElement("td");
+            var UpdateBtn = document.createElement("button");
+            UpdateBtn.textContent = "Update";
+            UpdateBtn.id = item.id;
+
+
+            UpdateBtn.onclick = function () {
+              console.log("navigating to update");
+              window.location = "todo-item-update.html?listId=" + listId + "&itemId=" + this.id;
+            };
+
+            actionsCell.appendChild(UpdateBtn);
+
+            var deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Delete";
+            deleteBtn.onclick = function () {
+              deleteItem(item.id);
+            };
+            actionsCell.appendChild(deleteBtn);
+
+            row.appendChild(actionsCell);
+            tableBody.appendChild(row);
+          }
+        }
+      };
+      xmlhttp.open("GET", "/todoapi/lists/" + listId + "/items", true);
+      xmlhttp.send();
+    }
+
+    function checkboxClick() {
+      console.log(this.id);
+      checkbox = this;
+      field = document.getElementById("f" + checkbox.id);
+      var itemId = checkbox.id.replace("item", "");
+      var isComplete = checkbox.checked;
+
+      if (isComplete) {
+        field.textContent = "complete";
+      }
+      else {
+        field.textContent = "in-progress";
+      }
+
+      saveTodoItem(itemId, isComplete);
+    };
+
+
+    /* 
+    This function is called when the "Save" button is clicked for a specific item.
+It sends an HTTP PUT request to the server endpoint "/todoapi/lists/{listId}/items/{itemId}" 
+to update the item's state (complete or in-progress).
+It creates an object with the updated state, converts it to JSON format, 
+and sends it in the request body. 
+*/
+    function saveTodoItem(itemId, isComplete) {
+      var data = JSON.stringify({
+        id: itemId,
+        state: isComplete ? "complete" : "in-progress",
+      });
+
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            console.log("Todo item updated");
+          } else {
+            console.log("Error updating todo item:", this.statusText);
+          }
+        }
+      };
+      xmlhttp.open("PUT", "/todoapi/lists/" + listId + "/items/" + itemId, true);
+      xmlhttp.setRequestHeader("Content-type", "application/json");
+      xmlhttp.send(data);
+    }
+
+    /* 
+    deleteItem(itemId) function:
+    This function is called when the "Delete" button is clicked for a specific item.
+     It sends an HTTP DELETE request to the server endpoint "/todoapi/lists/{listId}/items/{itemId}" to delete the item.
+     If the deletion is successful, it reloads the page to update the item list.
+     */
+
+    function deleteItem(itemId) {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            console.log(" Todo Item deleted");
+            window.location.reload();
+          } else {
+            console.log("Error deleting item:", this.statusText);
+          }
+        }
+      };
+      xmlhttp.open("DELETE", "/todoapi/lists/" + listId + "/items/" + itemId, true);
+      xmlhttp.send();
+    }
+
+    /* 
+    This event is triggered when the document's readyState changes.
+    When the document's readyState becomes "complete" (i.e., the page has finished loading), it retrieves the list ID from the URL parameter, calls the loadTodoItems(listId) function to load the todo items, 
+    and sets the value of the hidden input field for the list ID. 
+    */
+
+    window.onload = function () {
+      loadTodoItems();
+      getListName();
+    };
+
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Update Todo Item</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <h2>Update Todo Item</h2>
+    <div class="block-center">
+      <p><span id="page-message">Enter item details and click Save</span></p>
+      <p><span class="error-head">* required field.</span></p>
+
+      <form id="todoItemForm" onsubmit="submitForm(event)">
+        <input type="hidden" id="listId" name="listId" value="" />
+        <input type="hidden" id="itemId" name="itemId" value="" />
+        Item Name: <input type="text" id="itemName" />
+        <span id="itemNameErr" class="error">* </span>
+        <br /><br />
+        Item Description: <textarea id="itemDescription"></textarea>
+        <span id="itemDescriptionErr" class="error">* </span>
+        <br /><br />
+        state:
+        <select id="state">
+        <option value="in-progress">In Progress</option>
+        <option value="complete">Complete</option>
+        <br /><br />
+
+
+        </select>
+        <input type="submit" name="submit" value="Save" />
+      </form>
+
+
+      <form action="todo-list-update.html" method="get">
+        <input type="hidden" id="listIdCancel" name="id" value="" />
+        <button type="submit">Cancel</button>
+      </form>
+    </div>
+    <script>
+
+function urlParam(name) {
+        var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(
+          window.location.href
+        );
+        if (results == null) {
+          return null;
+        } else {
+          return results[1] || 0;
+        }
+      }
+
+      // Get the listId and itemId from the URL parameters
+      document.getElementById('listId').value = urlParam('listId');
+      document.getElementById('itemId').value = urlParam('itemId');
+      document.getElementById('listIdCancel').value = urlParam('listId');
+
+      // Load the item details
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+          var item = JSON.parse(this.responseText);
+          var description = JSON.parse(this.responseText);
+          document.getElementById('itemName').value = JSON.parse(this.responseText).item.name;
+          document.getElementById('itemDescription').value = JSON.parse(this.responseText).item.description;
+        }
+      };
+      xmlhttp.open('GET', '/todoapi/lists/' + urlParam('listId') + '/items/' + urlParam('itemId'), true);
+      xmlhttp.send();
+
+      function getItemName() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            if (this.status === 200) {
+              document.getElementById("name").value = JSON.parse(this.responseText).item.name;
+
+            } else {
+              document.getElementById("page-message").innerHTML =
+                "Error:" + this.statusText;
+            }
+          }
+        };
+        xmlhttp.open("GET", "/todoapi/lists/" + urlParam('listId') + '/items/' + urlParam('itemId'), true);
+        xmlhttp.send();
+      }
+
+
+      function submitForm(e) {
+        e.preventDefault();
+        var itemName = document.getElementById('itemName').value;
+        var itemDescription = document.getElementById('itemDescription').value;
+        var state = document.getElementById("state").value;
+
+        var data = JSON.stringify({
+          name: itemName,
+          description: itemDescription,
+          state: state,
+        });
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            if (this.status === 200) {
+              window.location.href = 'todo-list-update.html?id=' + urlParam('listId');
+            } else {
+              document.getElementById('page-message').innerHTML = 'Error: ' + this.statusText;
+            }
+          }
+        };
+        xmlhttp.open('PUT', '/todoapi/lists/' + urlParam('listId') + '/items/' + urlParam('itemId'), true);
+        xmlhttp.setRequestHeader('Content-type', 'application/json');
+        xmlhttp.send(data);
+      }
+
+      
+    window.onload = function () {
+      getItemName();
+    };
+    </script>
+  </body>
+</html>

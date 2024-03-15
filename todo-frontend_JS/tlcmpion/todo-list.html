@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Todo Lists</title>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+  <h2>Todo Lists</h2>
+  <div class="block-center">
+    <button onclick="addList()">Add</button>
+  </div>
+  <table id="todo-list-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function loadTodoLists() {
+      var xmlhttp = new XMLHttpRequest();
+
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+          var lists = JSON.parse(this.responseText).lists;
+          var tableBody = document.querySelector("#todo-list-table tbody");
+          tableBody.innerHTML = "";
+
+          for (var i = 0; i < lists.length; i++) {
+            var list = lists[i];
+            var row = document.createElement("tr");
+
+            var nameCell = document.createElement("td");
+            var listLink = document.createElement("a");
+            listLink.href = "todo-list-update.html?id=" + list.id;
+            listLink.textContent = list.name;
+            nameCell.appendChild(listLink);
+            row.appendChild(nameCell);
+
+            var actionsCell = document.createElement("td");
+            var deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = function (listId) {
+              return function () {
+                deleteList(listId);
+              };
+            }(list.id);
+            actionsCell.appendChild(deleteButton);
+            row.appendChild(actionsCell);
+
+            tableBody.appendChild(row);
+          }
+        }
+      };
+
+      xmlhttp.open("GET", "/todoapi/lists", true);
+      xmlhttp.send();
+    }
+
+    function addList() {
+      window.location.href = "todo-list-add.html";
+    }
+
+    function deleteList(listId) {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            loadTodoLists();
+          } else {
+            console.log("Error deleting list:", this.statusText);
+          }
+        }
+      };
+      xmlhttp.open("DELETE", "/todoapi/lists/" + listId, true);
+      xmlhttp.send();
+    }
+
+    document.onreadystatechange = function () {
+      if (document.readyState === "complete") {
+        loadTodoLists();
+      }
+    };
+  </script>
+</body>
+</html>

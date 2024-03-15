@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Delete Todo Item</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <h2>Delete Todo Item</h2>
+    <div class="block-center">
+      <p id="deleteMessage"></p>
+      <input type="hidden" id="listId" name="listId" value="" />
+      <input type="hidden" id="itemId" name="itemId" value="" />
+      <button onclick="deleteItem()">Delete</button>
+      <form action="todo-list-update.html" method="get">
+        <input type="hidden" id="listIdCancel" name="id" value="" />
+        <button type="submit">Cancel</button>
+      </form>
+    </div>
+    <script>
+
+
+function urlParam(name) {
+        var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(
+          window.location.href
+        );
+        if (results == null) {
+          return null;
+        } else {
+          return results[1] || 0;
+        }
+      }
+
+      // Get the listId and itemId from the URL parameters
+
+
+      var listId = urlParam('listId');
+      var itemId = urlParam('itemId');
+      document.getElementById('listId').value = listId;
+      document.getElementById('itemId').value = itemId;
+      document.getElementById('listIdCancel').value = listId;
+
+      // Load the item details
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+          var item = JSON.parse(this.responseText);
+          document.getElementById('deleteMessage').innerHTML = 'Delete item: ' + item.name + '?';
+        }
+      };
+      xmlhttp.open('GET', '/todoapi/lists/' + listId + '/items/' + itemId, true);
+      xmlhttp.send();
+
+      function deleteItem() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            if (this.status === 200) {
+              window.location.href = 'todo-list-update.html?id=' + listId;
+            } else {
+              document.getElementById('deleteMessage').innerHTML = 'Error: ' + this.statusText;
+            }
+          }
+        };
+        xmlhttp.open('DELETE', '/todoapi/lists/' + listId + '/items/' + itemId, true);
+        xmlhttp.send();
+      }
+    </script>
+  </body>
+</html>

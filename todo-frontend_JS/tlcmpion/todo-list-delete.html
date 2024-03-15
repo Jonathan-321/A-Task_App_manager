@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Delete Todo List</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <h2>Delete Todo List</h2>
+    <div class="block-center">
+      <p id="deleteMessage"></p>
+      <button onclick="deleteList()">Delete</button>
+      <form action="todo-list.html" method="get">
+        <button type="submit">Cancel</button>
+      </form>
+    </div>
+    <script>
+      var listId = new URLSearchParams(window.location.search).get("id");
+
+      function deleteList() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            if (this.status === 200) {
+              window.location.assign("todo-list.html");
+            } else {
+              document.getElementById("deleteMessage").innerHTML =
+                "Error:" + this.statusText;
+            }
+          }
+        };
+        xmlhttp.open("DELETE", "/todoapi/lists/" + listId, true);
+        xmlhttp.send();
+      }
+
+      document.onreadystatechange = function () {
+        if (document.readyState === "complete") {
+          var xmlhttp = new XMLHttpRequest();
+          xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+              var list = JSON.parse(this.responseText).list;
+              document.getElementById("deleteMessage").innerHTML =
+                "Delete list: " + list.name + "?";
+            }
+          };
+          xmlhttp.open("GET", "/todoapi/lists/" + listId, true);
+          xmlhttp.send();
+        }
+      };
+    </script>
+  </body>
+</html>
