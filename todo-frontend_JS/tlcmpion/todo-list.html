@@ -8,6 +8,7 @@
 <body>
   <h2>Todo Lists</h2>
   <div class="block-center">
+    <p>Hi, <span id="currentUser"></span> (<a href="#" onclick="logout()">Logout</a>)</p>
     <button onclick="addList()">Add</button>
   </div>
   <table id="todo-list-table">
@@ -80,9 +81,47 @@
       xmlhttp.send();
     }
 
+    // Function to retrieve the current user
+    function getCurrentUser() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+          var user = JSON.parse(this.responseText).user;
+          document.getElementById("currentUser").innerHTML = user.firstName + " " + user.lastName;
+        }
+      };
+      xmlhttp.open("GET", "/todoapi/users", true);
+      xmlhttp.withCredentials = true;
+      xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+      xmlhttp.send();
+    }
+
+
+  // Function to handle logout 
+
+  function logout() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+          } else {
+            console.log("Error logging out:", this.statusText);
+          }
+        }
+      };
+      xmlhttp.open("POST", "/todoapi/users/logout", true);
+      xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+      xmlhttp.send();
+    }
+
+
+    
     document.onreadystatechange = function () {
       if (document.readyState === "complete") {
         loadTodoLists();
+        getCurrentUser();
       }
     };
   </script>

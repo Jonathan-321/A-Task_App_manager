@@ -8,8 +8,13 @@
   <body>
     <h2>List Add</h2>
     <div class="block-center">
+
+      <p>Hi, <span id="currentUser"></span> (<a href="#" onclick="logout()">Logout</a>)</p>
+
       <p><span id="page-message">Enter fields and click Save</span></p>
       <p><span class="error-head">* required field.</span></p>
+
+      
       <form id="listForm" onsubmit="submitForm(event)">
         Name: <input type="text" id="name" />
         <span id="nameErr" class="error">* </span>
@@ -24,6 +29,42 @@
 
     </div>
     <script>
+
+      // Function to retrieve the current user
+      function getCurrentUser() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+
+            // if this is not how we get the current-user information, how can I do that??
+            var user = JSON.parse(this.responseText).user;
+            document.getElementById("currentUser").innerHTML = user.firstName + " " + user.lastName;
+          }
+        };
+
+        xmlhttp.open("GET", "/todoapi/users", true);
+        xmlhttp.withCredentials = true;
+        xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+        xmlhttp.send();
+      }
+
+      // Function to handle logout
+      function logout() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+              localStorage.removeItem("token");
+              window.location.href = "login.html";
+            } else {
+              console.log("Error logging out:", this.statusText);
+            }
+        };
+        xmlhttp.open("POST", "/todoapi/users/logout", true);
+        xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+        xmlhttp.send();
+      }
+
+
       function submitForm(e) {
         e.preventDefault();
         var name = document.getElementById("name").value;
@@ -33,14 +74,10 @@
         xmlhttp.onreadystatechange = function () {
           if (this.readyState === 4) {
             if (this.status === 201) {
-
               // Parse the response JSON
               var response = JSON.parse(this.responseText);
-
               // Extract the list ID from the response 
-
               var listId = response.listId;
-
               // Navigate to todo-list.html with the list ID as a query parameter 
 
               // window to todo-list.html after successful save 
@@ -55,6 +92,11 @@
         xmlhttp.setRequestHeader("Content-type", "application/json");
         xmlhttp.send(data);
       }
+
+      window.onload = function(){
+        getCurrentUser();
+      };
+
     </script>
   </body>
 </html>

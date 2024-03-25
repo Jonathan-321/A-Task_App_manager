@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" type="text/css" href="authStyles.css">
+</head>
+
+<body>
+  <h2>Login</h2>
+  <div class="block-center">
+    <p><span id="page-message">Enter fields and click Login</span></p>
+    <p><span class="error-head">* required field.</span></p>
+
+    <form id="loginForm" onsubmit="submitForm(event)">
+      Username: <input type="text" id="username">
+      <span id="usernameErr" class="error">* </span>
+      <br><br>
+
+      Password: <input type="password" id="password">
+      <span id="passwordErr" class="error">* </span>
+      <br><br>
+
+      <input type="submit" name="submit" value="Login">
+    </form>
+
+    <p><a href="add-user.html">Click to add new user</a></p>
+  </div>
+
+  <script>
+    function submitForm(e) {
+      e.preventDefault();
+      var username = document.getElementById("username").value;
+      var password = document.getElementById("password").value;
+
+
+      // using XMLHttpRequest 
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200)
+         {
+            var token =JSON.parse(this.responseText).token;
+            localStorage.setItem("token", token);
+            window.location.href = "todo-list.html";
+          }
+          else {
+            document.getElementById("page-message").innerHTML = "Error: " + this.statusText;
+          }
+      };
+      xmlhttp.open("POST", "/todoapi/users/login", true);
+      xmlhttp.withCredentials = true;
+      xmlhttp.setRequestHeader("Authorization", " Basic " + btoa(username + ":" + password)); 
+      xmlhttp.send();
+    }
+  </script>
+</body>
+</html>

@@ -9,7 +9,9 @@
 
 <body>
   <h2>Todo List Update</h2>
+
   <div class="block-center">
+    <p>Hi, <span id="currentUser"></span> (<a href="#" onclick="logout()">Logout</a>)</p>
     <p><span class="error-head">* required field.</span></p>
     <p><span id="page-message">Enter fields and click Save</span></p>
 
@@ -289,6 +291,40 @@ and sends it in the request body.
       xmlhttp.send();
     }
 
+     // Function to retrieve the current user
+     function getCurrentUser() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+
+            // if this is not how we get the current-user information, how can I do that??
+            var user = JSON.parse(this.responseText).user;
+            document.getElementById("currentUser").innerHTML = user.firstName + " " + user.lastName;
+          }
+        };
+
+        xmlhttp.open("GET", "/todoapi/users", true);
+        xmlhttp.withCredentials = true;
+        xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+        xmlhttp.send();
+      }
+
+      // Function to handle logout
+      function logout() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+              localStorage.removeItem("token");
+              window.location.href = "login.html";
+            } else {
+              console.log("Error logging out:", this.statusText);
+            }
+        };
+        xmlhttp.open("POST", "/todoapi/users/logout", true);
+        xmlhttp.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("token"));
+        xmlhttp.send();
+      }
+
     /* 
     This event is triggered when the document's readyState changes.
     When the document's readyState becomes "complete" (i.e., the page has finished loading), it retrieves the list ID from the URL parameter, calls the loadTodoItems(listId) function to load the todo items, 
@@ -298,6 +334,7 @@ and sends it in the request body.
     window.onload = function () {
       loadTodoItems();
       getListName();
+      getCurrentUser();
     };
 
 

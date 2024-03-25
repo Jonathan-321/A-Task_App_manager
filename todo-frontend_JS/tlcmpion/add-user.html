@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Add</title>
+  <link rel="stylesheet" type="text/css" href="authStyles.css">
+</head>
+
+<body>
+  <h2>User Add</h2>
+  <div class="block-center">
+    <p><span id="page-message">Enter fields and click Save</span></p>
+    <p><span class="error-head">* required field.</span></p>
+
+    <form id="userForm" onsubmit="submitForm(event)">
+      First Name: <input type="text" id="firstName">
+      <span id="firstNameErr" class="error">* </span>
+      <br><br>
+      Last Name: <input type="text" id="lastName">
+      <span id="lastNameErr" class="error">* </span>
+      <br><br>
+      Username: <input type="text" id="username">
+      <span id="usernameErr" class="error">* </span>
+      <br><br>
+      Password: <input type="password" id="password">
+      <span id="passwordErr" class="error">* </span>
+      <br><br>
+      <input type="submit" name="submit" value="Save">
+    </form>
+
+    <form action="login.html" method="get" id="cancelForm">
+      <button type="submit">Cancel</button>
+    </form>
+  </div>
+
+  <script>
+    function submitForm(e) {
+      e.preventDefault();
+      var firstName = document.getElementById("firstName").value;
+      var lastName = document.getElementById("lastName").value;
+      var username = document.getElementById("username").value;
+      var password = document.getElementById("password").value;
+      
+      var data = JSON.stringify({ 
+        firstName: firstName, 
+        lastName: lastName, 
+        username: username,
+        password: password });
+
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 201) {
+            window.location.href = "login.html";
+          } else if (this.status === 409) {
+            document.getElementById("page-message").innerHTML = "Username already in use. Please choose a different username.";
+          } else {
+            var errorResponse = JSON.parse(this.responseText);
+            document.getElementById("page-message").innerHTML = "Error: " + errorResponse.message;
+          }
+        }
+      };
+      xmlhttp.open("POST", "/todoapi/users/", true); // Corrected endpoint
+      xmlhttp.setRequestHeader("Content-type", "application/json");
+      xmlhttp.send(data);
+    }
+  </script>
+</body>
+</html>
